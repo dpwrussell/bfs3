@@ -15,6 +15,10 @@
 	<name>bfs3</name>
 	<url>http://maven.apache.org</url>
 
+	<properties>
+		<aws.version>1.9.39</aws.version>
+	</properties>
+
 	<repositories>
 		<!-- NB: For ome:formats-common -->
 		<repository>
@@ -27,7 +31,7 @@
 		<dependency>
 				<groupId>com.amazonaws</groupId>
 				<artifactId>aws-java-sdk</artifactId>
-				<version>1.9.39</version>
+				<version>${aws.version}</version>
 		</dependency>
 		<dependency>
 				<groupId>ome</groupId>
