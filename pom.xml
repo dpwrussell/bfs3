@@ -40,6 +40,11 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>bio-formats_plugins</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 </project>

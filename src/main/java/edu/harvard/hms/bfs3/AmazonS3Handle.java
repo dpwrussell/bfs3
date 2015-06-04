@@ -42,11 +42,6 @@ public class AmazonS3Handle implements IRandomAccess {
 
 	// -- Constructors --
 
-	public AmazonS3Handle() throws IOException {
-		// TEMP FOR TESTING
-		this("dpwr", "s3test/bus.png", Regions.US_EAST_1);
-	}
-
 	public AmazonS3Handle(final String bucketName, final String key,
 		final Regions regions) throws IOException
 	{
