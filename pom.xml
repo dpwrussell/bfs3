@@ -14,6 +14,7 @@
 
 	<name>bfs3</name>
 	<url>http://maven.apache.org</url>
+	<inceptionYear>2015</inceptionYear>
 
 	<properties>
 		<aws.version>1.9.39</aws.version>
