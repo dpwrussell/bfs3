@@ -15,6 +15,12 @@
 	<name>bfs3</name>
 	<url>http://maven.apache.org</url>
 	<inceptionYear>2015</inceptionYear>
+	<licenses>
+		<license>
+			<name>Simplified BSD License</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
 	<properties>
 		<aws.version>1.9.39</aws.version>
@@ -51,5 +57,20 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<configuration>
+					<licenseName>bsd_2</licenseName>
+					<organizationName>Harvard University and Board of Regents
+of the University of Wisconsin-Madison.</organizationName>
+					<projectName>Amazon S3 support for Bio-Formats.</projectName>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>
