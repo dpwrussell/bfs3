@@ -18,6 +18,7 @@ import java.nio.ByteOrder;
 
 import loci.common.DataTools;
 import loci.common.IRandomAccess;
+import loci.common.Location;
 
 /**
  * An {@link IRandomAccess} implementation for Amazon S3 data.
@@ -68,6 +69,17 @@ public class AmazonS3Handle implements IRandomAccess {
 			s3.getObjectMetadata(new GetObjectMetadataRequest(bucketName, key));
 
 		seek(0);
+	}
+
+	// -- Static utility methods --
+
+	public static String makeId(final String bucketName, final String key,
+		final Regions regions) throws IOException
+	{
+		final AmazonS3Handle handle = new AmazonS3Handle(bucketName, key, regions);
+		final String id = "https://s3.amazonaws.com/" + bucketName + "/" + key;
+		Location.mapFile(id, handle);
+		return id;
 	}
 
 	// -- FileHandle API methods --
