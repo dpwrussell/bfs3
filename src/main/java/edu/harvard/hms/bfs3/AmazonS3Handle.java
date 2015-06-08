@@ -57,7 +57,6 @@ import loci.common.Location;
 public class AmazonS3Handle extends AbstractHandle {
 
 	// -- Fields --
-
 	private final String bucketName;
 	private final String key;
 
@@ -82,7 +81,7 @@ public class AmazonS3Handle extends AbstractHandle {
 		super(false);
 		this.bucketName = bucketName;
 		this.key = key;
-
+		
 		s3 = c == null ? new AmazonS3Client() : new AmazonS3Client(c);
 		final Region usEast1 = Region.getRegion(regions);
 		s3.setRegion(usEast1);
@@ -90,7 +89,7 @@ public class AmazonS3Handle extends AbstractHandle {
 		// get the object metadata
 		objectMetadata =
 			s3.getObjectMetadata(new GetObjectMetadataRequest(bucketName, key));
-
+		
 		seek(0);
 	}
 
@@ -118,9 +117,25 @@ public class AmazonS3Handle extends AbstractHandle {
 		// NB: No action needed.
 	}
 
+	protected String getBucketName() {
+		return bucketName;
+	}
+
+	protected String getKey() {
+		return key;
+	}
+
+	public ObjectMetadata getObjectMetadata() {
+		return objectMetadata;
+	}
+
 	@Override
 	public long getFilePointer() throws IOException {
-		return pos;
+		return this.pos;
+	}
+	
+	protected void setFilePointer(long pos) throws IOException {
+		this.pos = pos;
 	}
 
 	@Override
@@ -132,14 +147,15 @@ public class AmazonS3Handle extends AbstractHandle {
 	public int read(final byte[] b, final int off, final int len)
 		throws IOException
 	{
+
 		final S3Object object =
-			s3.getObject(new GetObjectRequest(bucketName, key).withRange(pos, pos +
+			s3.getObject(new GetObjectRequest(bucketName, key).withRange(getFilePointer(), getFilePointer() +
 				len));
 
 		final S3ObjectInputStream stream = object.getObjectContent();
 		final int r = stream.read(b, off, len);
 		stream.close();
-		pos += r;
+		this.pos = getFilePointer() + r;
 		return r;
 	}
 
@@ -155,7 +171,7 @@ public class AmazonS3Handle extends AbstractHandle {
 		throw new UnsupportedOperationException();
 	}
 
-	// -- DataOutput API metthods --
+	// -- DataOutput API methods --
 
 	@Override
 	public void write(final byte[] b, final int off, final int len)
