@@ -92,7 +92,7 @@ public class S3Cache extends AmazonS3Handle {
 			// If there are no remaining cacheBlocks, create a placeholder which runs to the end
 			// of the requested bytes
 			if (nextDataValue == null) {
-				DataValue dv = new DataValue(pos, end-pos+1, null);
+				DataValue dv = this.populateBlock(pos, end-pos+1);
 				this.cache.put(new Long(pos), dv);
 				keys.add(new Long(pos));
 				// Set to end+1 so that we escape the while loop
@@ -101,7 +101,7 @@ public class S3Cache extends AmazonS3Handle {
 			// If the next available block starts at a location higher than the current position
 			// Create a placeholder to fill this gap
 			else if (nextDataValue.getStart() > pos) {
-				DataValue dv = new DataValue(pos, nextDataValue.getStart()-pos, null);
+				DataValue dv = this.populateBlock(pos, nextDataValue.getStart()-pos);
 				this.cache.put(new Long(pos), dv);
 				keys.add(new Long(pos));
 				pos = nextDataValue.getStart();
@@ -123,36 +123,25 @@ public class S3Cache extends AmazonS3Handle {
 		return keys;
 	}
 	
-	public void populateBlocks(List<Long> keys) throws IOException {
-		
-		for (Long k: keys) {
-			DataValue dv = this.cache.get(k);
-			// Get data for all the placeholders
-			if (dv.getData() == null) {
-				sum++;
-				System.out.println(sum);
-				final S3Object object =
-						this.getS3().getObject(new GetObjectRequest(this.getBucketName(), this.getKey()).withRange(dv.getStart(), dv.getEnd()));
-				final S3ObjectInputStream stream = object.getObjectContent();
-				byte[] b = new byte[(int) (0 + dv.getLength())];
-				stream.read(b, 0, (int) (0 + dv.getLength()));
-				dv.setData(b);
-				stream.close();
-			}
-		}
-
+	private DataValue populateBlock(Long start, Long length) throws IOException {
+		sum++;
+		System.out.println(sum);
+		final S3Object object =
+				this.getS3().getObject(new GetObjectRequest(this.getBucketName(), this.getKey()).withRange(start, start + length - 1));
+		final S3ObjectInputStream stream = object.getObjectContent();
+		byte[] b = new byte[(int) (0 + length)];
+		stream.read(b, 0, (int) (0 + length));
+		DataValue dv = new DataValue(start, length, b);
+		stream.close();
+		return dv;
 	}
-	
-	
+
 	@Override
 	public int read(final byte[] b, final int off, final int len) throws IOException {
 
 		// Get the blocks that correspond to the requested range
 		List<Long> keys = this.getBlocks(len);
-		
-		// Populate any blocks that were previously unpopulated
-		this.populateBlocks(keys);
-		
+
 		for (Long key: keys) {
 			DataValue dv = this.cache.get(key);
 			dv.getBytes(b, new Long(off), this.getFilePointer(), new Long(len));
