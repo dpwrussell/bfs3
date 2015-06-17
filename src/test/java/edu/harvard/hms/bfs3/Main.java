@@ -49,18 +49,18 @@ public class Main {
 		final Regions regions = Regions.US_EAST_1;
 
 
-		final String id = AmazonS3Handle.makeId(bucketName, key, regions);
+//		final String id = AmazonS3Handle.makeId(bucketName, key, regions);
 //		final String id = S3Cache.makeId(bucketName, key, regions);
 
-		final ImagePlus[] imps = BF.openImagePlus(id);
+//		final ImagePlus[] imps = BF.openImagePlus(id);
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/train.jpg");
-		new ImageJ();
-		for (final ImagePlus imp : imps)
-			imp.show();
+//		new ImageJ();
+//		for (final ImagePlus imp : imps)
+//			imp.show();
 
 		
 		
-//		S3Cache s3 = new S3Cache(bucketName, key, regions);
+		S3Cache s3 = new S3Cache(bucketName, key, regions);
 //		AmazonS3Handle s3b = new AmazonS3Handle(bucketName, key, regions);
 		
 //		s3.seek(20);
@@ -211,14 +211,20 @@ public class Main {
 		System.out.println();
 		 */
 		
-		// Singly byte test
-//		s3.seek(0);
-//		byte[] b2 = new byte[1];
-//		s3.read(b2);
+		// Single byte test
+		s3.seek(20);
+		byte[] b2 = new byte[1];
+		s3.read(b2);
+		s3.printCache();
 //		
 //		s3.seek(0);
 //		byte[] b3 = new byte[1];
 //		s3.read(b2);
+		
+		s3.seek(0);
+		byte[] b3 = new byte[37];
+		s3.read(b3);
+		s3.printCache();
 	}
 
 		
