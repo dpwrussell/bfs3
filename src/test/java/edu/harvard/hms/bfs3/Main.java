@@ -215,7 +215,9 @@ public class Main {
 		s3.seek(20);
 		byte[] b2 = new byte[1];
 		s3.read(b2);
+		System.out.println("XXX");
 		s3.printCache();
+		System.out.println("YYY");
 //		
 //		s3.seek(0);
 //		byte[] b3 = new byte[1];

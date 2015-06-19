@@ -78,25 +78,38 @@ public class S3Cache extends AmazonS3Handle {
 		List<Long> keys = new ArrayList<Long>();
 		
 		// Loop until enough blocks are found in the cache or requested (and thus added to the cache)
-		Long got = new Long(0);
-		while (got < len) {
+		Long vPos = start;
+		while (vPos < end + 1) {
 			// Find the next relevant cache block
-			Long key = cache.floorKey(start + got);
+			Entry<Long, DataValue> entry = cache.floorEntry(vPos);
 			
-			// If there is no floor key or the whole range falls before the requested bytes
-			if (key == null || this.cache.get(key).inRange(start, end) == false) {
+			// If there is no floor key or the requested bytes start before the cached block 
+			if (entry == null || vPos < entry.getValue().getStart()) {
+				System.out.println("They fell before or there were none");
 				// Get the next block (if there is one) to figure how far away it is
-				Entry<Long, DataValue> nextBlock = cache.ceilingEntry(start + got);
+				Entry<Long, DataValue> nextBlock = cache.ceilingEntry(vPos);
 				
 				// Determine how many bytes to retrieve
-				Long retrieve = retrieveCount(len - got, start + got, nextBlock);
+				Long retrieve = retrieveCount(end - vPos, vPos, nextBlock);
 				
 				// Get and add this block to the cache
-				System.out.println("Adding " + retrieve + " bytes to the cache at location " + start + got);
-				DataValue dv = this.populateBlock(start + got, retrieve);
-				this.cache.put(new Long(start+got), dv);
-				keys.add(new Long(start+got));
-				got += retrieve;
+				System.out.println("Adding " + retrieve + " bytes to the cache at location " + vPos);
+				DataValue dv = this.populateBlock(vPos, retrieve);
+				this.cache.put(new Long(vPos), dv);
+				keys.add(new Long(vPos));
+				vPos += retrieve;
+				System.out.println("vPos: " + vPos);
+			}
+			// If the requested bytes starts after the cached block
+			else if (vPos > entry.getValue().getEnd()) {
+//				System.out.println("They fell after");
+			} else {
+				System.out.println("They overlapped");
+				
+				// Add this block to the list of useful blocks
+				keys.add(entry.getKey());
+				vPos = entry.getValue().getEnd(); //TODO +1 ?
+				System.out.println(vPos + " - " + end);
 			}
 		}
 		
