@@ -38,9 +38,9 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -66,6 +66,15 @@ public class AmazonS3Handle extends AbstractHandle {
 
 	/** The current byte offset into the object stream. */
 	private long pos;
+
+	/** Active stream (if any) for a range of data from Amazon S3 service. */
+	private S3ObjectInputStream stream;
+
+	/** Number of bytes read from the active stream, if applicable. */
+	private int read;
+
+	/** Total number of bytes available from the active stream, if applicable. */
+	private int total;
 
 	// -- Constructors --
 
@@ -115,7 +124,7 @@ public class AmazonS3Handle extends AbstractHandle {
 
 	@Override
 	public void close() throws IOException {
-		// NB: No action needed.
+		disposeStream();
 	}
 
 	@Override
@@ -132,19 +141,43 @@ public class AmazonS3Handle extends AbstractHandle {
 	public int read(final byte[] b, final int off, final int len)
 		throws IOException
 	{
-		final S3Object object =
-			s3.getObject(new GetObjectRequest(bucketName, key).withRange(pos, pos +
-				len));
+		if (stream != null && read + len > total) {
+			// more bytes requested than are available from the active stream;
+			// we need to start a new one instead.
+			disposeStream();
+		}
+		if (stream == null) {
+			// no active stream; let's create one!
+			read = 0;
+			total = len;
+			final GetObjectRequest request =
+				new GetObjectRequest(bucketName, key).withRange(pos, pos + total);
+			stream = s3.getObject(request).getObjectContent();
+		}
 
-		final S3ObjectInputStream stream = object.getObjectContent();
+		// read the bytes
 		final int r = stream.read(b, off, len);
-		stream.close();
+		if (r < 0) throw new EOFException();
+		read += r;
+
+		// sanity check
+		if (read > total) {
+			throw new IllegalStateException("Read more bytes than possible? off=" +
+				off + ", len=" + len + ", read=" + read + ", total=" + total);
+		}
+
+		if (read == total) {
+			// Finished reading all the bytes! We are done.
+			disposeStream();
+		}
+
 		pos += r;
 		return r;
 	}
 
 	@Override
 	public void seek(final long pos) throws IOException {
+		disposeStream();
 		this.pos = pos;
 	}
 
@@ -162,6 +195,15 @@ public class AmazonS3Handle extends AbstractHandle {
 		throws IOException
 	{
 		throw new UnsupportedOperationException();
+	}
+
+	// -- Helper methods --
+
+	/** Shuts down the active stream, if any. */
+	private void disposeStream() throws IOException {
+		if (stream == null) return;
+		stream.close();
+		stream = null;
 	}
 
 }
