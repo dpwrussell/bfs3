@@ -1,7 +1,5 @@
 package edu.harvard.hms.bfs3;
 
-import java.lang.Math;
-
 public class DataValue {
 	private Long length;
 	private Long end;
@@ -19,14 +17,6 @@ public class DataValue {
 	public Long getStart() {
 		return this.start;
 	}
-	
-//	public Long getNextByte(Long start) {
-//		if ((this.getStart() <= start) &&
-//			(this.getEnd() >= start)) {
-//			return Math.max(this.getStart(), start);
-//		}
-//		return start;
-//	}
 
 	public Long getEnd() {
 		return this.end;
@@ -42,19 +32,6 @@ public class DataValue {
 	
 	public void setData(byte[] b) {
 		this.data = b;
-	}
-	
-	public int inRange(Long start, Long end) {
-		// If the end of the requested range is before this range
-		if (end < this.getStart()) {
-			return -1;
-		}
-		// If the start of the requested range is beyond the end of this range
-		else if (start > this.getEnd()) {
-			return 1;
-		}
-		// Otherwise it overlaps
-		return 0;
 	}
 	
 	// Write all the bytes that are present in this data value into the given byte array

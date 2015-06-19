@@ -2,7 +2,6 @@ package edu.harvard.hms.bfs3;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -64,7 +63,7 @@ public class S3Cache extends AmazonS3Handle {
 		// and the next cached block (if there is one)
 		// Drop down to the number to fill the gap
 		if (nextBlock != null && pos + requested > nextBlock.getValue().getStart()) {
-			requested = nextBlock.getValue().getStart() - 1;
+			requested = nextBlock.getValue().getStart() - pos;
 		}
 		return requested;
 	}
@@ -83,9 +82,9 @@ public class S3Cache extends AmazonS3Handle {
 			// Find the next relevant cache block
 			Entry<Long, DataValue> entry = cache.floorEntry(vPos);
 			
-			// If there is no floor key or the requested bytes start before the cached block 
-			if (entry == null || vPos < entry.getValue().getStart()) {
-				System.out.println("They fell before or there were none");
+			// If there is no floor key (either there are no cached blocks or the first cached block is after the requested bytes)
+			// or the requested bytes start after the cached block 
+			if (entry == null || vPos > entry.getValue().getEnd()) {
 				// Get the next block (if there is one) to figure how far away it is
 				Entry<Long, DataValue> nextBlock = cache.ceilingEntry(vPos);
 				
@@ -93,128 +92,24 @@ public class S3Cache extends AmazonS3Handle {
 				Long retrieve = retrieveCount(end - vPos, vPos, nextBlock);
 				
 				// Get and add this block to the cache
-				System.out.println("Adding " + retrieve + " bytes to the cache at location " + vPos);
 				DataValue dv = this.populateBlock(vPos, retrieve);
 				this.cache.put(new Long(vPos), dv);
 				keys.add(new Long(vPos));
 				vPos += retrieve;
-				System.out.println("vPos: " + vPos);
-			}
-			// If the requested bytes starts after the cached block
-			else if (vPos > entry.getValue().getEnd()) {
-//				System.out.println("They fell after");
 			} else {
-				System.out.println("They overlapped");
 				
 				// Add this block to the list of useful blocks
 				keys.add(entry.getKey());
-				vPos = entry.getValue().getEnd(); //TODO +1 ?
-				System.out.println(vPos + " - " + end);
+				vPos = entry.getValue().getEnd() + 1;
 			}
 		}
 		
 		return keys;
-//
-//		
-//		
-//		// There may be no matching keys if the requested range starts before an existing cache block
-//		// Or the entire block may be before the range 
-//		if (key == null || this.cache.get(key).inRange(start, end) == false) {
-//			key = cache.higherKey(start);
-//			if (key != null && this.cache.get(key).inRange(start, end) == false) {
-//				key = null;
-//			}
-//		}
-//		// If the key is still null then there are no cache blocks at all
-//		if (key == null) {
-//			// Set the set of matching keys to be empty
-//			subcache = new ConcurrentSkipListMap<Long, DataValue>();
-//		}
-//		
-//		
-//		
-//
-//		
-//		
-//		
-//
-//		
-//		// Find the existing cache blocks within the range of the read
-//		Long key = cache.floorKey(start);
-//		Long toKey = cache.floorKey(end);
-//		
-//		// Container for the useful cache blocks
-//		ConcurrentNavigableMap<Long, DataValue> subcache;
-//		
-//		// There may be no matching keys if the requested range starts before an existing cache block
-//		// Or the entire block may be before the range 
-//		if (key == null || this.cache.get(key).inRange(start, end) == false) {
-//			key = cache.higherKey(start);
-//			if (key != null && this.cache.get(key).inRange(start, end) == false) {
-//				key = null;
-//			}
-//		}
-//		// If the key is still null then there are no cache blocks at all
-//		if (key == null) {
-//			// Set the set of matching keys to be empty
-//			subcache = new ConcurrentSkipListMap<Long, DataValue>();
-//		}
-//		// Otherwise get all these useful cache blocks
-//		else {
-//			subcache = cache.subMap(key, true, toKey, true);
-//		}
-//
-//		// Start at the lowest desired position and fill in either cache blocks or placeholders
-//		Long pos = start;
-//		
-//		// Get an iterator for the cacheBlocks
-//		//TODO This is backed by the underlying map, so perhaps I should get the keys and look those up as I add blocks to the map during the following operations
-//		Iterator<DataValue> cacheBlocks = subcache.values().iterator();
-//		DataValue nextDataValue = null;
-//		if (cacheBlocks.hasNext()) {
-//			nextDataValue = cacheBlocks.next();
-//		}
-//		
-//		List<Long> keys = new ArrayList<Long>();
-//		
-//		while (pos <= end) {
-//			// If there are no remaining cacheBlocks, create a placeholder which runs to the end
-//			// of the requested bytes
-//			if (nextDataValue == null) {
-//				DataValue dv = this.populateBlock(pos, end-pos+1);
-//				this.cache.put(new Long(pos), dv);
-//				keys.add(new Long(pos));
-//				// Set to end+1 so that we escape the while loop
-//				pos = end+1;
-//			}
-//			// If the next available block starts at a location higher than the current position
-//			// Create a placeholder to fill this gap
-//			else if (nextDataValue.getStart() > pos) {
-//				DataValue dv = this.populateBlock(pos, nextDataValue.getStart()-pos);
-//				this.cache.put(new Long(pos), dv);
-//				keys.add(new Long(pos));
-//				pos = nextDataValue.getStart();
-//			}
-//			// If the current position is inside an existing cache block
-//			// Advance to the next block
-//			else {
-//				keys.add(nextDataValue.getStart());
-//				pos = nextDataValue.getEnd() + 1;
-//				if (cacheBlocks.hasNext()) {
-//					nextDataValue = cacheBlocks.next();
-//				} else {
-//					nextDataValue = null;
-//				}
-//			}
-//		}
-//
-//		// Return the keys that correspond to the cache blocks and placeholders
-//		return keys;
 	}
 	
 	private DataValue populateBlock(Long start, Long length) throws IOException {
 		sum++;
-		System.out.println(sum);
+		System.out.println(sum + " retrieving: " + start + " - " + (start + length - 1));
 		final S3Object object =
 				this.getS3().getObject(new GetObjectRequest(this.getBucketName(), this.getKey()).withRange(start, start + length - 1));
 		final S3ObjectInputStream stream = object.getObjectContent();

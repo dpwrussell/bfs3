@@ -50,68 +50,19 @@ public class Main {
 
 
 //		final String id = AmazonS3Handle.makeId(bucketName, key, regions);
-//		final String id = S3Cache.makeId(bucketName, key, regions);
+		final String id = S3Cache.makeId(bucketName, key, regions);
 
-//		final ImagePlus[] imps = BF.openImagePlus(id);
+		final ImagePlus[] imps = BF.openImagePlus(id);
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/train.jpg");
-//		new ImageJ();
-//		for (final ImagePlus imp : imps)
-//			imp.show();
+		new ImageJ();
+		for (final ImagePlus imp : imps)
+			imp.show();
 
 		
 		
-		S3Cache s3 = new S3Cache(bucketName, key, regions);
+//		S3Cache s3 = new S3Cache(bucketName, key, regions);
 //		AmazonS3Handle s3b = new AmazonS3Handle(bucketName, key, regions);
-		
-//		s3.seek(20);
-//		byte[] b = new byte[20];
-//		s3.read(b);
-//
-//		byte[] b2 = new byte[10];
-//		s3.read(b2);
-//
-//		s3.seek(100);
-//		byte[] b3 = new byte[5];
-//		s3.read(b3);
-		
-//		s3.seek(75);
-//		System.out.println("Not cached here");
-//		s3.getBlocks(20000);
-//		System.out.println("Fully cached from here");
-//		s3.seek(75);
-//		s3.getBlocks(20000);
-//		
-//		for (byte bi: b) {
-//			System.out.print(bi + " ");
-//		}
-//		
-//		s3.seek(15);
-//		System.out.println();
-//		
-
-//		
-//		for (byte bi: b2) {
-//			System.out.print(bi + " ");
-//		}
-		
-
-//		s3.seek(0);
-//		byte[] b = new byte[6];
-//		s3.read(b, 2, 2);
-//		
-//		for (byte bi: b) {
-//			System.out.print(bi + " ");
-//		}
-		
-//		s3.seek(0);
-//		byte[] b2 = new byte[20];
-//		s3.read(b2);
-//		
-//		for (byte bi: b2) {
-//			System.out.print(bi + " ");
-//		}
-		
-		
+				
 // Test AmazonS3Handle and S3Cache in conjunction
 //		s3.seek(0);
 //		byte[] bp = new byte[51];
@@ -130,103 +81,7 @@ public class Main {
 //		for (byte bi: bb) {
 //			System.out.print(bi + " ");
 //		}
-		
-		/*
-		byte[] b;
-		byte[] bb;
-		
-		s3.seek(0);
-		b = new byte[8];
-		s3.read(b);
-		s3b.seek(0);
-		bb = new byte[8];
-		s3b.read(bb);
-		for (byte bi: b) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-		for (byte bi: bb) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-		
-		s3.seek(8);
-		b = new byte[4];
-		s3.read(b);
-		s3b.seek(8);
-		bb = new byte[4];
-		s3b.read(bb);
-		for (byte bi: b) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-		for (byte bi: bb) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
 
-		s3.seek(12);
-		b = new byte[4];
-		s3.read(b);
-		s3b.seek(12);
-		bb = new byte[4];
-		s3b.read(bb);
-		for (byte bi: b) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-		for (byte bi: bb) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-
-		s3.seek(16);
-		b = new byte[4];
-		s3.read(b);
-		s3b.seek(16);
-		bb = new byte[4];
-		s3b.read(bb);
-		for (byte bi: b) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-		for (byte bi: bb) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-
-		s3.seek(20);
-		b = new byte[4];
-		s3.read(b);
-		s3b.seek(20);
-		bb = new byte[4];
-		s3b.read(bb);
-		for (byte bi: b) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-		for (byte bi: bb) {
-			System.out.print(bi + " ");
-		}
-		System.out.println();
-		 */
-		
-		// Single byte test
-		s3.seek(20);
-		byte[] b2 = new byte[1];
-		s3.read(b2);
-		System.out.println("XXX");
-		s3.printCache();
-		System.out.println("YYY");
-//		
-//		s3.seek(0);
-//		byte[] b3 = new byte[1];
-//		s3.read(b2);
-		
-		s3.seek(0);
-		byte[] b3 = new byte[37];
-		s3.read(b3);
-		s3.printCache();
 	}
 
 		
