@@ -45,7 +45,8 @@ public class Main {
 
 	public static void main(String... args) throws IOException, FormatException {
 		final String bucketName = "dpwr";
-		final String key = "s3test/bus.png";
+//		final String key = "s3test/bus.png";
+		final String key = "s3test/IN_01.r3d_D3D.dv";
 		final Regions regions = Regions.US_EAST_1;
 
 
@@ -53,7 +54,7 @@ public class Main {
 		final String id = S3Cache.makeId(bucketName, key, regions);
 
 		final ImagePlus[] imps = BF.openImagePlus(id);
-//		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/train.jpg");
+//		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/IN_01.r3d_D3D.dv");
 		new ImageJ();
 		for (final ImagePlus imp : imps)
 			imp.show();
