@@ -35,7 +35,9 @@ import com.amazonaws.regions.Regions;
 import ij.ImageJ;
 import ij.ImagePlus;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import loci.formats.FormatException;
 import loci.plugins.BF;
@@ -46,23 +48,28 @@ public class Main {
 	public static void main(String... args) throws IOException, FormatException {
 		final String bucketName = "dpwr";
 //		final String key = "s3test/bus.png";
-		final String key = "s3test/IN_01.r3d_D3D.dv";
+//		final String key = "s3test/bus.tif";
+//		final String key = "s3test/IN_01.r3d_D3D.dv";
+		final String key = "s3test/hs.tif";
+//		final String key = "s3test/03302014-r1.nd.ome.tif";
 		final Regions regions = Regions.US_EAST_1;
 
 
 //		final String id = AmazonS3Handle.makeId(bucketName, key, regions);
-		final String id = S3Cache.makeId(bucketName, key, regions);
+//		final String id = S3Cache.makeId(bucketName, key, regions);
 
-		final ImagePlus[] imps = BF.openImagePlus(id);
-//		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/IN_01.r3d_D3D.dv");
-		new ImageJ();
-		for (final ImagePlus imp : imps)
-			imp.show();
+//		final ImagePlus[] imps = BF.openImagePlus(id);
+//		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif");
+//		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/bus.tif");
+//		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/hs.tif");
+//		new ImageJ();
+//		for (final ImagePlus imp : imps)
+//			imp.show();
 
 		
 		
 //		S3Cache s3 = new S3Cache(bucketName, key, regions);
-//		AmazonS3Handle s3b = new AmazonS3Handle(bucketName, key, regions);
+		AmazonS3Handle s3 = new AmazonS3Handle(bucketName, key, regions);
 				
 // Test AmazonS3Handle and S3Cache in conjunction
 //		s3.seek(0);
@@ -82,6 +89,23 @@ public class Main {
 //		for (byte bi: bb) {
 //			System.out.print(bi + " ");
 //		}
+		
+		byte[] allbytes = new byte[(int) s3.length()];
+//		
+//		int n = 0;
+//		while (n < (int) s3.length()) {
+//			n += s3.read(allbytes, n, 1000000);
+//			
+//		}
+		
+		s3.readFully(allbytes);
+		
+		// hs5 is 100000bytes per request - OK
+		// hs6 is using readFully
+		OutputStream out = new FileOutputStream("/Users/dpwrussell/Downloads/TestData/tif/hs6.tif");
+		out.write(allbytes);
+		out.flush();
+		out.close();
 
 	}
 

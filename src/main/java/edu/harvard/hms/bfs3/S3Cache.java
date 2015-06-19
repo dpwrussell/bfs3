@@ -2,6 +2,7 @@ package edu.harvard.hms.bfs3;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -18,7 +19,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 public class S3Cache extends AmazonS3Handle {
 	private ConcurrentNavigableMap<Long, DataValue> cache;
 	int sum;
-	Long readAHead = new Long(100);
+	Long readAHead = new Long(10*1000*1000);
 
 	public S3Cache(AWSCredentials c, String bucketName, String key,
 			Regions regions) throws IOException {
@@ -47,24 +48,29 @@ public class S3Cache extends AmazonS3Handle {
 
 	// Calculate how many bytes to retrieve
 	private Long retrieveCount(Long requested, Long pos, Entry<Long, DataValue> nextBlock) throws IOException {
-
+		System.out.println("--------------------");
+		
+		System.out.println("requested: " + requested);
 		// Bump up the request size to the readAHead
 		if (requested < this.readAHead) {
 			requested = this.readAHead;
 		}
-
+		System.out.println("requested: " + requested);
 		// If the request is for more bytes than there are left in the file
 		// Drop down to the remaining number
 		if (pos + requested > this.length()) {
+			System.out.println("Bailing for length: " + this.length() + " from: " + pos);
 			requested = this.length() - pos;
 		}
-
+		System.out.println("requested: " + requested);
 		// If the request is for more bytes than there are between the position
 		// and the next cached block (if there is one)
 		// Drop down to the number to fill the gap
 		if (nextBlock != null && pos + requested > nextBlock.getValue().getStart()) {
 			requested = nextBlock.getValue().getStart() - pos;
 		}
+		System.out.println("requested: " + requested);
+		
 		return requested;
 	}
 	
@@ -73,7 +79,7 @@ public class S3Cache extends AmazonS3Handle {
 		
 		Long start = new Long(this.getFilePointer());
 		Long end = new Long(len + this.getFilePointer() -1);
-		
+		System.out.println("start: " + start + " end: " + end + " len: " + len + " max: " + this.length() + " available: " + (this.length() - start));
 		List<Long> keys = new ArrayList<Long>();
 		
 		// Loop until enough blocks are found in the cache or requested (and thus added to the cache)
@@ -91,13 +97,22 @@ public class S3Cache extends AmazonS3Handle {
 				// Determine how many bytes to retrieve
 				Long retrieve = retrieveCount(end - vPos, vPos, nextBlock);
 				
+				// If there are no bytes to retrieve, BioFormats is reading beyond the end of the file
+				// This seems like a bug, but I handle it here simply by bailing from the getBlock operation
+				// if retrieveCount determines that there are zero bytes to be read which should only happen
+				// if BioFormats is attempting to read beyond the file length
+				// TODO File bug?
+				if (retrieve == 0) {
+					break;
+				}
+				
 				// Get and add this block to the cache
 				DataValue dv = this.populateBlock(vPos, retrieve);
 				this.cache.put(new Long(vPos), dv);
 				keys.add(new Long(vPos));
 				vPos += retrieve;
 			} else {
-				
+
 				// Add this block to the list of useful blocks
 				keys.add(entry.getKey());
 				vPos = entry.getValue().getEnd() + 1;
@@ -109,7 +124,7 @@ public class S3Cache extends AmazonS3Handle {
 	
 	private DataValue populateBlock(Long start, Long length) throws IOException {
 		sum++;
-		System.out.println(sum + " retrieving: " + start + " - " + (start + length - 1));
+		System.out.println(sum + " retrieving: " + start + " - " + (start + length - 1) + " (" + length + ")");
 		final S3Object object =
 				this.getS3().getObject(new GetObjectRequest(this.getBucketName(), this.getKey()).withRange(start, start + length - 1));
 		final S3ObjectInputStream stream = object.getObjectContent();
@@ -122,7 +137,7 @@ public class S3Cache extends AmazonS3Handle {
 
 	@Override
 	public int read(final byte[] b, final int off, final int len) throws IOException {
-
+		System.out.println("Requesting bytes: " + this.getFilePointer() + " - " + (len + this.getFilePointer()-1) + " len: " + len + " max: " + (this.length() - this.getFilePointer()));
 		// Get the blocks that correspond to the requested range
 		List<Long> keys = this.getBlocks(len);
 

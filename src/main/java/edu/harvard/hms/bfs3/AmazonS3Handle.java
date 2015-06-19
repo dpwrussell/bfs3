@@ -154,6 +154,7 @@ public class AmazonS3Handle extends AbstractHandle {
 
 		final S3ObjectInputStream stream = object.getObjectContent();
 		final int r = stream.read(b, off, len);
+		System.out.println("Read from S3: " + r);
 		stream.close();
 		this.pos = getFilePointer() + r;
 		return r;

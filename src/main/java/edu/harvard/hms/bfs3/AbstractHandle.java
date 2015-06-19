@@ -123,6 +123,7 @@ public abstract class AbstractHandle implements IRandomAccess {
 		int remain = len;
 		int read = 0;
 		while (remain > 0) {
+			System.out.println("Remaining: " + remain);
 			final int r = read(b, off + read, remain);
 			if (r < 0) throw new IOException("EOF");// TODO double check this
 			// TODO verify that r can never be 0 (probably not)
