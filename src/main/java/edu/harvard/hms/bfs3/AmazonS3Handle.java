@@ -61,6 +61,9 @@ public class AmazonS3Handle extends AbstractHandle {
 	private final String bucketName;
 	private final String key;
 
+	/** Minimum amount of data to request from S3 per web services call. */
+	private int minRequestSize = 1024 * 1024; // 1 MiB
+
 	private final AmazonS3 s3;
 	private final ObjectMetadata objectMetadata;
 
@@ -116,8 +119,25 @@ public class AmazonS3Handle extends AbstractHandle {
 
 	// -- AmazonS3Handle API methods --
 
+	/** Gets the Amazon S3 web services gateway. */
 	public AmazonS3 getS3() {
 		return s3;
+	}
+
+	/**
+	 * Sets the minimum amount of data that will be retrieved with each web
+	 * services call to S3.
+	 */
+	public void setMinimumRequestSize(final int minRequestSize) {
+		this.minRequestSize = minRequestSize;
+	}
+
+	/**
+	 * Gets the minimum amount of data that will be retrieved with each web
+	 * services call to S3.
+	 */
+	public int getMinimumRequestSize() {
+		return minRequestSize;
 	}
 
 	// -- IRandomAccess API methods --
@@ -149,7 +169,7 @@ public class AmazonS3Handle extends AbstractHandle {
 		if (stream == null) {
 			// no active stream; let's create one!
 			read = 0;
-			total = len;
+			total = Math.min(Math.max(len, minRequestSize), remain());
 			final GetObjectRequest request =
 				new GetObjectRequest(bucketName, key).withRange(pos, pos + total);
 			stream = s3.getObject(request).getObjectContent();
@@ -204,6 +224,12 @@ public class AmazonS3Handle extends AbstractHandle {
 		if (stream == null) return;
 		stream.close();
 		stream = null;
+	}
+
+	/** Bytes remaining in the data. */
+	private int remain() throws IOException {
+		final long remain = length() - getFilePointer();
+		return remain < Integer.MAX_VALUE ? (int) remain : Integer.MAX_VALUE;
 	}
 
 }
