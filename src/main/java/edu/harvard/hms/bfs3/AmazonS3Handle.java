@@ -114,7 +114,7 @@ public class AmazonS3Handle extends AbstractHandle {
 		return id;
 	}
 
-	// -- FileHandle API methods --
+	// -- AmazonS3Handle API methods --
 
 	public AmazonS3 getS3() {
 		return s3;
@@ -188,7 +188,7 @@ public class AmazonS3Handle extends AbstractHandle {
 		throw new UnsupportedOperationException();
 	}
 
-	// -- DataOutput API metthods --
+	// -- DataOutput API methods --
 
 	@Override
 	public void write(final byte[] b, final int off, final int len)
