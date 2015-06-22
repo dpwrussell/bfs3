@@ -19,7 +19,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 public class S3Cache extends AmazonS3Handle {
 	private ConcurrentNavigableMap<Long, DataValue> cache;
 	int sum;
-	Long readAHead = new Long(10*1000*1000);
+	Long readAHead = new Long(1*1000*1000);
 
 	public S3Cache(AWSCredentials c, String bucketName, String key,
 			Regions regions) throws IOException {
@@ -59,7 +59,7 @@ public class S3Cache extends AmazonS3Handle {
 		// If the request is for more bytes than there are left in the file
 		// Drop down to the remaining number
 		if (pos + requested > this.length()) {
-			System.out.println("Bailing for length: " + this.length() + " from: " + pos);
+			System.out.println("Bailing for length: " + this.length() + " from: " + pos + " requested: " + requested);
 			requested = this.length() - pos;
 		}
 		System.out.println("requested: " + requested);
@@ -129,7 +129,12 @@ public class S3Cache extends AmazonS3Handle {
 				this.getS3().getObject(new GetObjectRequest(this.getBucketName(), this.getKey()).withRange(start, start + length - 1));
 		final S3ObjectInputStream stream = object.getObjectContent();
 		byte[] b = new byte[(int) (0 + length)];
-		stream.read(b, 0, (int) (0 + length));
+		
+		int read = 0;
+		while (read < length) {
+			read += stream.read(b, read, (int) (length - read));
+		}
+
 		DataValue dv = new DataValue(start, length, b);
 		stream.close();
 		return dv;

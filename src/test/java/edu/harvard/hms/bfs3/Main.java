@@ -38,6 +38,9 @@ import ij.ImagePlus;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import loci.formats.FormatException;
 import loci.plugins.BF;
@@ -56,20 +59,20 @@ public class Main {
 
 
 //		final String id = AmazonS3Handle.makeId(bucketName, key, regions);
-//		final String id = S3Cache.makeId(bucketName, key, regions);
+		final String id = S3Cache.makeId(bucketName, key, regions);
 
-//		final ImagePlus[] imps = BF.openImagePlus(id);
+		final ImagePlus[] imps = BF.openImagePlus(id);
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif");
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/bus.tif");
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/hs.tif");
-//		new ImageJ();
-//		for (final ImagePlus imp : imps)
-//			imp.show();
+		new ImageJ();
+		for (final ImagePlus imp : imps)
+			imp.show();
 
 		
 		
 //		S3Cache s3 = new S3Cache(bucketName, key, regions);
-		AmazonS3Handle s3 = new AmazonS3Handle(bucketName, key, regions);
+//		AmazonS3Handle s3 = new AmazonS3Handle(bucketName, key, regions);
 				
 // Test AmazonS3Handle and S3Cache in conjunction
 //		s3.seek(0);
@@ -90,7 +93,7 @@ public class Main {
 //			System.out.print(bi + " ");
 //		}
 		
-		byte[] allbytes = new byte[(int) s3.length()];
+//		byte[] allbytes = new byte[(int) s3.length()];
 //		
 //		int n = 0;
 //		while (n < (int) s3.length()) {
@@ -98,14 +101,39 @@ public class Main {
 //			
 //		}
 		
-		s3.readFully(allbytes);
+//		s3.read(allbytes);
 		
 		// hs5 is 100000bytes per request - OK
 		// hs6 is using readFully
-		OutputStream out = new FileOutputStream("/Users/dpwrussell/Downloads/TestData/tif/hs6.tif");
-		out.write(allbytes);
-		out.flush();
-		out.close();
+//		OutputStream out = new FileOutputStream("/Users/dpwrussell/Downloads/TestData/tif/hs6.tif");
+//		out.write(allbytes);
+//		out.flush();
+//		out.close();
+		
+//		int into = 51506137;
+//		
+//		s3.seek(into);
+//		byte[] cbytes = new byte[10];
+//		s3.read(cbytes);
+//		
+//		System.out.println();
+//		System.out.print("C: ");
+//		for (int i=0; i < 10; i++) {
+//			System.out.print(cbytes[i] + " ");
+//		}
+//		
+//		System.out.println();
+//		System.out.print("A: ");
+//		for (int i=0; i < 10; i++) {
+//			System.out.print(allbytes[i+into] + " ");
+//		}
+//		System.out.println();
+//		System.out.print("F: ");
+//		Path path = Paths.get("/Users/dpwrussell/Downloads/TestData/tif/hs.tif");
+//		byte[] fileBytes = Files.readAllBytes(path);
+//		for (int i=0; i < 10; i++) {
+//			System.out.print(fileBytes[i+into] + " ");
+//		}
 
 	}
 
