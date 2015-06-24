@@ -48,28 +48,31 @@ public class S3Cache extends AmazonS3Handle {
 
 	// Calculate how many bytes to retrieve
 	private Long retrieveCount(Long requested, Long pos, Entry<Long, DataValue> nextBlock) throws IOException {
-		System.out.println("--------------------");
 		
-		System.out.println("requested: " + requested);
 		// Bump up the request size to the readAHead
 		if (requested < this.readAHead) {
+			
+			// Jumbo size requests over 1k
+//			if (requested >= 1024) {
+//				requested = this.readAHead * 100;
+//			} else {
+//				requested = this.readAHead;
+//			}
 			requested = this.readAHead;
 		}
-		System.out.println("requested: " + requested);
+
 		// If the request is for more bytes than there are left in the file
 		// Drop down to the remaining number
 		if (pos + requested > this.length()) {
-			System.out.println("Bailing for length: " + this.length() + " from: " + pos + " requested: " + requested);
 			requested = this.length() - pos;
 		}
-		System.out.println("requested: " + requested);
+
 		// If the request is for more bytes than there are between the position
 		// and the next cached block (if there is one)
 		// Drop down to the number to fill the gap
 		if (nextBlock != null && pos + requested > nextBlock.getValue().getStart()) {
 			requested = nextBlock.getValue().getStart() - pos;
 		}
-		System.out.println("requested: " + requested);
 		
 		return requested;
 	}
@@ -79,7 +82,7 @@ public class S3Cache extends AmazonS3Handle {
 		
 		Long start = new Long(this.getFilePointer());
 		Long end = new Long(len + this.getFilePointer() -1);
-		System.out.println("start: " + start + " end: " + end + " len: " + len + " max: " + this.length() + " available: " + (this.length() - start));
+//		System.out.println("start: " + start + " end: " + end + " len: " + len + " max: " + this.length() + " available: " + (this.length() - start));
 		List<Long> keys = new ArrayList<Long>();
 		
 		// Loop until enough blocks are found in the cache or requested (and thus added to the cache)
@@ -124,7 +127,7 @@ public class S3Cache extends AmazonS3Handle {
 	
 	private DataValue populateBlock(Long start, Long length) throws IOException {
 		sum++;
-		System.out.println(sum + " retrieving: " + start + " - " + (start + length - 1) + " (" + length + ")");
+//		System.out.println(sum + " retrieving: " + start + " - " + (start + length - 1) + " (" + length + ")");
 		final S3Object object =
 				this.getS3().getObject(new GetObjectRequest(this.getBucketName(), this.getKey()).withRange(start, start + length - 1));
 		final S3ObjectInputStream stream = object.getObjectContent();
@@ -142,7 +145,7 @@ public class S3Cache extends AmazonS3Handle {
 
 	@Override
 	public int read(final byte[] b, final int off, final int len) throws IOException {
-		System.out.println("Requesting bytes: " + this.getFilePointer() + " - " + (len + this.getFilePointer()-1) + " len: " + len + " max: " + (this.length() - this.getFilePointer()));
+//		System.out.println("Requesting bytes: " + this.getFilePointer() + " - " + (len + this.getFilePointer()-1) + " len: " + len + " max: " + (this.length() - this.getFilePointer()));
 		// Get the blocks that correspond to the requested range
 		List<Long> keys = this.getBlocks(len);
 

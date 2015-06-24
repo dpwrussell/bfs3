@@ -53,21 +53,21 @@ public class Main {
 //		final String key = "s3test/bus.png";
 //		final String key = "s3test/bus.tif";
 //		final String key = "s3test/IN_01.r3d_D3D.dv";
-		final String key = "s3test/hs.tif";
-//		final String key = "s3test/03302014-r1.nd.ome.tif";
+//		final String key = "s3test/hs.tif";
+		final String key = "s3test/03302014-r1.nd.ome.tif";
 		final Regions regions = Regions.US_EAST_1;
 
 
 //		final String id = AmazonS3Handle.makeId(bucketName, key, regions);
-		final String id = S3Cache.makeId(bucketName, key, regions);
+//		final String id = S3Cache.makeId(bucketName, key, regions);
 
-		final ImagePlus[] imps = BF.openImagePlus(id);
+//		final ImagePlus[] imps = BF.openImagePlus(id);
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif");
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/bus.tif");
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/hs.tif");
-		new ImageJ();
-		for (final ImagePlus imp : imps)
-			imp.show();
+//		new ImageJ();
+//		for (final ImagePlus imp : imps)
+//			imp.show();
 
 		
 		
@@ -135,6 +135,44 @@ public class Main {
 //			System.out.print(fileBytes[i+into] + " ");
 //		}
 
+		// Test reading file in several different size chunks
+		// 1 chunk
+		long start = System.currentTimeMillis();
+		S3Cache s3 = new S3Cache(bucketName, key, regions);
+		byte[] b = new byte[(int) s3.length()];
+		s3.read(b);
+		long end = System.currentTimeMillis();
+		System.out.println("Read file in one shot: " + (end-start) + "ms");
+		s3.printCache();
+
+		// 10 chunks
+		start = System.currentTimeMillis();
+		s3 = new S3Cache(bucketName, key, regions);
+		b = new byte[(int) s3.length()];
+		int read = 0;
+		while (read < s3.length()) {
+			read += s3.read(b, read, (int) (s3.length()/10));
+		}
+		
+		end = System.currentTimeMillis();
+		System.out.println("Read file in 10 chunks" + (end-start) + "ms");		
+		s3.printCache();
+		
+		// 100ish chunks
+		start = System.currentTimeMillis();
+		s3 = new S3Cache(bucketName, key, regions);
+		b = new byte[(int) s3.length()];
+		read = 0;
+		while (read < s3.length()) {
+//			System.out.println(read);
+//			read += s3.read(b, read, (int) (s3.length()/100));
+			read += s3.read(b, read, 8770000);
+		}
+		
+		end = System.currentTimeMillis();
+		System.out.println("Read file in 100 chunks" + (end-start) + "ms");
+		s3.printCache();
+		
 	}
 
 		
