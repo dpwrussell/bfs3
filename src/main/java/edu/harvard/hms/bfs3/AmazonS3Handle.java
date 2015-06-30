@@ -65,6 +65,9 @@ public class AmazonS3Handle extends AbstractHandle {
 
 	/** The current byte offset into the object stream. */
 	private long pos;
+	
+	/** The number of requests that have been made on the current object **/
+	protected long requestCount;
 
 	// -- Constructors --
 
@@ -89,7 +92,7 @@ public class AmazonS3Handle extends AbstractHandle {
 		// get the object metadata
 		objectMetadata =
 			s3.getObjectMetadata(new GetObjectMetadataRequest(bucketName, key));
-		
+		requestCount = 0;
 		seek(0);
 	}
 

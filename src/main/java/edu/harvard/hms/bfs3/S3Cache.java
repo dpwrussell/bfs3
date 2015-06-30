@@ -19,13 +19,16 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 public class S3Cache extends AmazonS3Handle {
 	private ConcurrentNavigableMap<Long, DataValue> cache;
 	int sum;
-	Long readAHead = new Long(1*1000*1000);
+	int totalBytesRead;
+//	Long readAHead = new Long(1*1024*1024);
+	Long readAHead = new Long(0);
 
 	public S3Cache(AWSCredentials c, String bucketName, String key,
 			Regions regions) throws IOException {
 		super(c, bucketName, key, regions);
 		this.cache = new ConcurrentSkipListMap<Long, DataValue>();
 		sum = 0;
+		totalBytesRead = 0;
 	}
 	
 	public S3Cache(String bucketName, String key, Regions regions)
@@ -33,6 +36,7 @@ public class S3Cache extends AmazonS3Handle {
 		super(bucketName, key, regions);
 		this.cache = new ConcurrentSkipListMap<Long, DataValue>();
 		sum = 0;
+		totalBytesRead = 0;
 	}
 	
 	// -- Static utility methods --
@@ -54,7 +58,7 @@ public class S3Cache extends AmazonS3Handle {
 			
 			// Jumbo size requests over 1k
 //			if (requested >= 1024) {
-//				requested = this.readAHead * 100;
+//				requested = this.readAHead * 10;
 //			} else {
 //				requested = this.readAHead;
 //			}
@@ -127,7 +131,9 @@ public class S3Cache extends AmazonS3Handle {
 	
 	private DataValue populateBlock(Long start, Long length) throws IOException {
 		sum++;
-//		System.out.println(sum + " retrieving: " + start + " - " + (start + length - 1) + " (" + length + ")");
+		
+		// Abstract this
+		
 		final S3Object object =
 				this.getS3().getObject(new GetObjectRequest(this.getBucketName(), this.getKey()).withRange(start, start + length - 1));
 		final S3ObjectInputStream stream = object.getObjectContent();
@@ -137,7 +143,8 @@ public class S3Cache extends AmazonS3Handle {
 		while (read < length) {
 			read += stream.read(b, read, (int) (length - read));
 		}
-
+		totalBytesRead += read;
+		System.out.println(sum + " retrieving: " + start + " - " + (start + length - 1) + " (" + length + ") -- Total: " + (totalBytesRead/1024/1024) + "MiB");
 		DataValue dv = new DataValue(start, length, b);
 		stream.close();
 		return dv;

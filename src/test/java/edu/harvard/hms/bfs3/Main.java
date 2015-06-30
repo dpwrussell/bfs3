@@ -44,6 +44,7 @@ import java.nio.file.Paths;
 
 import loci.formats.FormatException;
 import loci.plugins.BF;
+import loci.plugins.in.ImporterOptions;
 
 /** Manual test drive of {@link AmazonS3Handle}. */
 public class Main {
@@ -59,15 +60,22 @@ public class Main {
 
 
 //		final String id = AmazonS3Handle.makeId(bucketName, key, regions);
-//		final String id = S3Cache.makeId(bucketName, key, regions);
-
-//		final ImagePlus[] imps = BF.openImagePlus(id);
+		final String id = S3Cache.makeId(bucketName, key, regions);
+//		final String id = "/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif";
+		
+		ImporterOptions options = new ImporterOptions();
+		options.setId(id);
+		options.setVirtual(true);
+		
+		final ImagePlus[] imps = BF.openImagePlus(options);
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif");
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/bus.tif");
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/hs.tif");
-//		new ImageJ();
-//		for (final ImagePlus imp : imps)
-//			imp.show();
+		
+		new ImageJ();
+		for (final ImagePlus imp : imps)
+			imp.show();
+			
 
 		
 		
@@ -129,19 +137,30 @@ public class Main {
 //		}
 //		System.out.println();
 //		System.out.print("F: ");
-//		Path path = Paths.get("/Users/dpwrussell/Downloads/TestData/tif/hs.tif");
+//		Path path = Paths.get("/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif");
 //		byte[] fileBytes = Files.readAllBytes(path);
 //		for (int i=0; i < 10; i++) {
 //			System.out.print(fileBytes[i+into] + " ");
 //		}
-
+/*
+		// Test reading from disk
+		long start = System.currentTimeMillis();
+		Path path = Paths.get("/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif");
+		byte[] b = Files.readAllBytes(path);
+		int sum = 0;
+		for (byte bi: b) {
+			sum += bi;
+		}
+		long end = System.currentTimeMillis();
+		System.out.println("Read file from disk: " + (end-start) + "ms - " + sum);
+		System.exit(1);
 		// Test reading file in several different size chunks
 		// 1 chunk
-		long start = System.currentTimeMillis();
+		start = System.currentTimeMillis();
 		S3Cache s3 = new S3Cache(bucketName, key, regions);
-		byte[] b = new byte[(int) s3.length()];
+		b = new byte[(int) s3.length()];
 		s3.read(b);
-		long end = System.currentTimeMillis();
+		end = System.currentTimeMillis();
 		System.out.println("Read file in one shot: " + (end-start) + "ms");
 		s3.printCache();
 
@@ -172,7 +191,7 @@ public class Main {
 		end = System.currentTimeMillis();
 		System.out.println("Read file in 100 chunks" + (end-start) + "ms");
 		s3.printCache();
-		
+	*/	
 	}
 
 		

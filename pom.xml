@@ -70,6 +70,14 @@ of the University of Wisconsin-Madison.</organizationName>
 					<projectName>Amazon S3 support for Bio-Formats.</projectName>
 				</configuration>
 			</plugin>
+			<plugin>
+			  <groupId>org.codehaus.mojo</groupId>
+			  <artifactId>exec-maven-plugin</artifactId>
+			  <version>1.1</version>
+			  <configuration>
+			    <mainClass>edu.harvard.hms.bfs3.Main</mainClass>
+			  </configuration>
+			</plugin>
 		</plugins>
 	</build>
 
