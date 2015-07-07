@@ -20,8 +20,8 @@ public class S3Cache extends AmazonS3Handle {
 	private ConcurrentNavigableMap<Long, DataValue> cache;
 	int sum;
 	int totalBytesRead;
-//	Long readAHead = new Long(1*1024*1024);
-	Long readAHead = new Long(0);
+	Long readAHead = new Long(1*1024);
+//	Long readAHead = new Long(0);
 
 	public S3Cache(AWSCredentials c, String bucketName, String key,
 			Regions regions) throws IOException {

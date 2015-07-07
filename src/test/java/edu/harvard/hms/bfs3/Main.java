@@ -60,26 +60,23 @@ public class Main {
 
 
 //		final String id = AmazonS3Handle.makeId(bucketName, key, regions);
-		final String id = S3Cache.makeId(bucketName, key, regions);
+//		final String id = S3Cache.makeId(bucketName, key, regions);
 //		final String id = "/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif";
 		
-		ImporterOptions options = new ImporterOptions();
-		options.setId(id);
-		options.setVirtual(true);
+//		ImporterOptions options = new ImporterOptions();
+//		options.setId(id);
+//		options.setVirtual(true);
 		
-		final ImagePlus[] imps = BF.openImagePlus(options);
+//		final ImagePlus[] imps = BF.openImagePlus(options);
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/ometif/03302014-r1.nd.ome.tif");
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/bus.tif");
 //		final ImagePlus[] imps = BF.openImagePlus("/Users/dpwrussell/Downloads/TestData/tif/hs.tif");
 		
-		new ImageJ();
-		for (final ImagePlus imp : imps)
-			imp.show();
-			
-
+//		new ImageJ();
+//		for (final ImagePlus imp : imps)
+//			imp.show();
 		
-		
-//		S3Cache s3 = new S3Cache(bucketName, key, regions);
+		S3Cache s3 = new S3Cache(bucketName, key, regions);
 //		AmazonS3Handle s3 = new AmazonS3Handle(bucketName, key, regions);
 				
 // Test AmazonS3Handle and S3Cache in conjunction
@@ -192,6 +189,13 @@ public class Main {
 		System.out.println("Read file in 100 chunks" + (end-start) + "ms");
 		s3.printCache();
 	*/	
+		
+		// 658 1k blocks
+		byte[] full = new byte[(int) s3.length()];
+		int pos = 0;
+		for (int i=0; i<658; i++) {
+			pos += s3.read(full, pos, 1024);
+		}
 	}
 
 		
