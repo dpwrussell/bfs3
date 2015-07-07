@@ -190,12 +190,15 @@ public class Main {
 		s3.printCache();
 	*/	
 		
+		long start = System.currentTimeMillis();
 		// 658 1k blocks
 		byte[] full = new byte[(int) s3.length()];
 		int pos = 0;
 		for (int i=0; i<658; i++) {
 			pos += s3.read(full, pos, 1024);
 		}
+		long end = System.currentTimeMillis();
+		System.out.println("658 1k reads " + (end-start) + "ms");
 	}
 
 		
