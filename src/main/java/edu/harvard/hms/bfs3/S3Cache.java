@@ -21,7 +21,8 @@ public class S3Cache extends AmazonS3Handle {
 	int sum;
 	int totalBytesRead;
 	Long readAHead = new Long(1*1024);
-//	Long readAHead = new Long(0);
+	//TODO Fix bug with 0 read-a-head, 1+ works	
+	// Long readAHead = new Long(0);
 
 	public S3Cache(AWSCredentials c, String bucketName, String key,
 			Regions regions) throws IOException {
@@ -30,7 +31,7 @@ public class S3Cache extends AmazonS3Handle {
 		sum = 0;
 		totalBytesRead = 0;
 	}
-	
+
 	public S3Cache(String bucketName, String key, Regions regions)
 			throws IOException {
 		super(bucketName, key, regions);
@@ -38,7 +39,7 @@ public class S3Cache extends AmazonS3Handle {
 		sum = 0;
 		totalBytesRead = 0;
 	}
-	
+
 	// -- Static utility methods --
 
 	public static String makeId(final String bucketName, final String key,
@@ -52,10 +53,10 @@ public class S3Cache extends AmazonS3Handle {
 
 	// Calculate how many bytes to retrieve
 	private Long retrieveCount(Long requested, Long pos, Entry<Long, DataValue> nextBlock) throws IOException {
-		
+
 		// Bump up the request size to the readAHead
 		if (requested < this.readAHead) {
-			
+
 			// Jumbo size requests over 1k
 //			if (requested >= 1024) {
 //				requested = this.readAHead * 10;
@@ -77,33 +78,32 @@ public class S3Cache extends AmazonS3Handle {
 		if (nextBlock != null && pos + requested > nextBlock.getValue().getStart()) {
 			requested = nextBlock.getValue().getStart() - pos;
 		}
-		
+
 		return requested;
 	}
-	
+
 	// Get the blocks for bytes requested
 	public List<Long> getBlocks(int len) throws IOException {
-		
+
 		Long start = new Long(this.getFilePointer());
 		Long end = new Long(len + this.getFilePointer() -1);
-//		System.out.println("start: " + start + " end: " + end + " len: " + len + " max: " + this.length() + " available: " + (this.length() - start));
 		List<Long> keys = new ArrayList<Long>();
-		
+
 		// Loop until enough blocks are found in the cache or requested (and thus added to the cache)
 		Long vPos = start;
 		while (vPos < end + 1) {
 			// Find the next relevant cache block
 			Entry<Long, DataValue> entry = cache.floorEntry(vPos);
-			
+
 			// If there is no floor key (either there are no cached blocks or the first cached block is after the requested bytes)
-			// or the requested bytes start after the cached block 
+			// or the requested bytes start after the cached block
 			if (entry == null || vPos > entry.getValue().getEnd()) {
 				// Get the next block (if there is one) to figure how far away it is
 				Entry<Long, DataValue> nextBlock = cache.ceilingEntry(vPos);
-				
+
 				// Determine how many bytes to retrieve
 				Long retrieve = retrieveCount(end - vPos, vPos, nextBlock);
-				
+
 				// If there are no bytes to retrieve, BioFormats is reading beyond the end of the file
 				// This seems like a bug, but I handle it here simply by bailing from the getBlock operation
 				// if retrieveCount determines that there are zero bytes to be read which should only happen
@@ -112,7 +112,7 @@ public class S3Cache extends AmazonS3Handle {
 				if (retrieve == 0) {
 					break;
 				}
-				
+
 				// Get and add this block to the cache
 				DataValue dv = this.populateBlock(vPos, retrieve);
 				this.cache.put(new Long(vPos), dv);
@@ -125,20 +125,20 @@ public class S3Cache extends AmazonS3Handle {
 				vPos = entry.getValue().getEnd() + 1;
 			}
 		}
-		
+
 		return keys;
 	}
-	
+
 	private DataValue populateBlock(Long start, Long length) throws IOException {
 		sum++;
-		
+
 		// Abstract this
-		
+
 		final S3Object object =
 				this.getS3().getObject(new GetObjectRequest(this.getBucketName(), this.getKey()).withRange(start, start + length - 1));
 		final S3ObjectInputStream stream = object.getObjectContent();
 		byte[] b = new byte[(int) (0 + length)];
-		
+
 		int read = 0;
 		while (read < length) {
 			read += stream.read(b, read, (int) (length - read));
@@ -152,7 +152,8 @@ public class S3Cache extends AmazonS3Handle {
 
 	@Override
 	public int read(final byte[] b, final int off, final int len) throws IOException {
-//		System.out.println("Requesting bytes: " + this.getFilePointer() + " - " + (len + this.getFilePointer()-1) + " len: " + len + " max: " + (this.length() - this.getFilePointer()));
+		System.out.println("Requesting bytes: " + this.getFilePointer() + " - " + (len + this.getFilePointer()-1) + " len: " + len + " max: " + (this.length() - this.getFilePointer()));
+
 		// Get the blocks that correspond to the requested range
 		List<Long> keys = this.getBlocks(len);
 
@@ -166,7 +167,7 @@ public class S3Cache extends AmazonS3Handle {
 
 		return len;
 	}
-	
+
 	public void printCache() {
 		System.out.println("Blocks");
 		for (DataValue dv: cache.values()) {
